@@ -4,7 +4,7 @@
 
 Summary:   Xorg X11 ast video driver
 Name:      xorg-x11-drv-ast
-Version:   0.98.0
+Version:   1.1.5
 Release:   1%{?dist}
 URL:       http://www.x.org
 License:   MIT
@@ -53,6 +53,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/hwdata/videoaliases/ast.xinf
 
 %changelog
+* Wed Nov 11 2015 Adam Jackson <ajax@redhat.com> 1.1.5-1
+- ast 1.1.5
+
 * Wed Apr 23 2014 Adam Jackson <ajax@redhat.com> 0.98.0-1
 - ast 0.98.0
 
