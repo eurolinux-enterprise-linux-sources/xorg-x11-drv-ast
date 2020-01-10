@@ -44,8 +44,6 @@
 /* framebuffer offscreen manager */
 #include "xf86fbman.h"
 
-/* include xaa includes */
-#include "xaa.h"
 #include "xaarop.h"
 
 /* H/W cursor support */
@@ -82,7 +80,7 @@ bInitCMDQInfo(ScrnInfoPtr pScrn, ASTRecPtr pAST)
     if (!pAST->MMIO2D) {
         pAST->CMDQInfo.ulCMDQType = VM_CMD_QUEUE;	
        
-        pScreen = screenInfo.screens[pScrn->scrnIndex];
+        pScreen = xf86ScrnToScreen(pScrn);
       
         do {
             pAST->pCMDQPtr = xf86AllocateOffscreenLinear (pScreen, pAST->CMDQInfo.ulCMDQSize, 8, NULL, NULL, NULL);
@@ -272,10 +270,12 @@ bEnable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST)
        
        ulData = *(ULONG *) (pAST->MMIOVirtualAddr + 0x1200c);
        *(ULONG *) (pAST->MMIOVirtualAddr + 0x1200c) = (ulData & 0xFFFFFFFD);
+
+    case AST2000:                          
+       SetIndexRegMask(CRTC_PORT, 0xA4, 0xFE, 0x01);		/* enable 2D */  
+       
        break;
     }
-	
-    SetIndexRegMask(CRTC_PORT, 0xA4, 0xFE, 0x01);		/* enable 2D */  
    
     if (!bInitCMDQInfo(pScrn, pAST))
     {
@@ -299,7 +299,8 @@ vDisable2D(ScrnInfoPtr pScrn, ASTRecPtr pAST)
     vWaitEngIdle(pScrn, pAST);
     vWaitEngIdle(pScrn, pAST);
 
-    SetIndexRegMask(CRTC_PORT, 0xA4, 0xFE, 0x00);		  
+    if (pAST->jChipType != AST1180)
+        SetIndexRegMask(CRTC_PORT, 0xA4, 0xFE, 0x00);		  
 	
 }
 
@@ -315,14 +316,18 @@ vWaitEngIdle(ScrnInfoPtr pScrn, ASTRecPtr pAST)
         ulEngCheckSetting = 0x10000000;
     else
         ulEngCheckSetting = 0x80000000;
+
+    if (pAST->jChipType != AST1180)
+    {
+
+        /* 2D disable if 0xA4 D[0] = 1 */
+        GetIndexRegMask(CRTC_PORT, 0xA4, 0x01, jReg);  
+        if (!jReg) goto Exit_vWaitEngIdle;
     
-    /* 2D disable if 0xA4 D[0] = 1 */
-    GetIndexRegMask(CRTC_PORT, 0xA4, 0x01, jReg);  
-    if (!jReg) goto Exit_vWaitEngIdle;
-    
-    /* 2D not work if in std. mode */
-    GetIndexRegMask(CRTC_PORT, 0xA3, 0x0F, jReg);  
-    if (!jReg) goto Exit_vWaitEngIdle;
+        /* 2D not work if in std. mode */
+        GetIndexRegMask(CRTC_PORT, 0xA3, 0x0F, jReg);  
+        if (!jReg) goto Exit_vWaitEngIdle;
+    }
 
     do  
     {

@@ -23,12 +23,19 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef HAVE_XAA_H
+#include "xaa.h"
+#endif
+
 #include "ast_pcirename.h"
+
+#include "compat-api.h"
 
 /* Compiler Options */
 #define	Accel_2D
 /* #define MMIO_2D */
 #define HWC
+#define AstVideo
 /* #define PATCH_ABI_VERSION */
 
 /* Vendor & Device Info */
@@ -44,6 +51,10 @@
 #define PCI_CHIP_AST2100		0x2010
 #endif
 
+#ifndef	PCI_CHIP_AST1180
+#define PCI_CHIP_AST1180		0x1180
+#endif
+
 typedef enum _CHIP_ID {
     VGALegacy,
     AST2000,
@@ -51,7 +62,8 @@ typedef enum _CHIP_ID {
     AST1100,
     AST2200,
     AST2150,
-    AST2300
+    AST2300,
+    AST1180
 } CHIP_ID;
 
 /* AST REC Info */
@@ -82,7 +94,17 @@ typedef CARD32  	ULONG;
 
 /* Data Structure Definition */
 typedef struct _ASTRegRec {
+	
     UCHAR 	ExtCRTC[0x50];
+
+    UCHAR 	MISC;	
+    UCHAR 	SEQ[4];
+    UCHAR 	CRTC[25];
+    UCHAR 	AR[20];	    
+    UCHAR 	GR[9];
+    UCHAR	DAC[256][3];
+ 
+    ULONG	GFX[12];
     
 } ASTRegRec, *ASTRegPtr;
 
@@ -138,6 +160,41 @@ typedef struct {
         
 } HWCINFO, *PHWCINFO;
 
+typedef struct _ASTPortPrivRec{
+    FBLinearPtr     linear;
+    FBAreaPtr       fbAreaPtr;
+    int             fbSize;
+    CARD32          bufAddr[2];
+
+    unsigned char   currentBuf;
+
+    short           drw_x, drw_y, drw_w, drw_h;
+    short           src_x, src_y, src_w, src_h;
+    int             id;
+    short           srcPitch, height;
+
+    INT32           brightness;
+    INT32           contrast;
+    INT32           saturation;
+    INT32           hue;
+    
+    INT32           gammaR;
+    INT32           gammaG;
+    INT32           gammaB;
+
+    RegionRec       clip;
+    CARD32          colorKey;
+
+    CARD32          videoStatus;
+    Time            offTime;
+    Time            freeTime;
+	
+    CARD32          displayMode;
+
+    int             pitch;
+    int             offset;
+} ASTPortPrivRec, *ASTPortPrivPtr;
+
 typedef struct _ASTRec {
 	
     EntityInfoPtr 	pEnt;
@@ -151,7 +208,9 @@ typedef struct _ASTRec {
     OptionInfoPtr 	Options;
     DisplayModePtr      ModePtr;		    
     FBLinearPtr 	pCMDQPtr;    
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr	AccelInfoPtr;
+#endif
     xf86CursorInfoPtr   HWCInfoPtr;
     FBLinearPtr 	pHWCPtr;    
 
@@ -160,6 +219,11 @@ typedef struct _ASTRec {
 
     UCHAR		jChipType;
     UCHAR		jDRAMType;
+    ULONG		ulDRAMBusWidth  ;
+    ULONG		ulDRAMSize;
+    ULONG		ulVRAMSize;
+    ULONG		ulVRAMBase;
+    ULONG               ulMCLK;
              
     Bool 		noAccel;
     Bool 		noHWC;
@@ -193,9 +257,18 @@ typedef struct _ASTRec {
     int			clip_top;
     int			clip_right;    
     int			clip_bottom;    	
-   		
-} ASTRec, *ASTRecPtr;
-	
+
+    int			mon_h_active;		/* Monitor Info. */
+    int			mon_v_active;
+
+#ifdef AstVideo
+    XF86VideoAdaptorPtr adaptor;
+    Atom        	xvBrightness, xvContrast, xvColorKey, xvHue, xvSaturation;
+    Atom		xvGammaRed, xvGammaGreen, xvGammaBlue;
+#endif
+
+} ASTRec, *ASTRecPtr, *ASTPtr;
+
 #define ASTPTR(p) ((ASTRecPtr)((p)->driverPrivate))
 
 /* Include Files */

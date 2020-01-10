@@ -54,6 +54,9 @@
 #define VCLK106_5   		0x12
 #define VCLK146_25  		0x13
 #define VCLK148_5   		0x14
+#define VCLK71      		0x15
+#define VCLK88_75   		0x16
+#define VCLK119     		0x17
 
 /* Flags Definition */
 #define Charx8Dot               0x00000001
@@ -66,6 +69,7 @@
 #define SyncNN                  0x000000C0
 #define HBorder                 0x00000020
 #define VBorder                 0x00000010
+#define WideScreenMode		0x00000100
 
 /* DAC Definition */
 #define DAC_NUM_TEXT		64
