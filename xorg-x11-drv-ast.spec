@@ -4,8 +4,8 @@
 
 Summary:   Xorg X11 ast video driver
 Name:      xorg-x11-drv-ast
-Version:   0.97.0
-Release:   2%{?dist}
+Version:   0.98.0
+Release:   1%{?dist}
 URL:       http://www.x.org
 License:   MIT
 Group:     User Interface/X Hardware Support
@@ -30,7 +30,7 @@ X.Org X11 ast video driver.
 
 %build
 %configure --disable-static --disable-dri
-make %{?_smp_mflags}
+make
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -53,11 +53,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/hwdata/videoaliases/ast.xinf
 
 %changelog
-* Wed Aug 22 2012 airlied@redhat.com - 0.97.0-2
-- rebuild for server ABI requires
-
-* Mon Aug 06 2012 Dave Airlie <airlied@redhat.com> 0.97.0-1
-- upstream release 0.97.0
+* Wed Apr 23 2014 Adam Jackson <ajax@redhat.com> 0.98.0-1
+- ast 0.98.0
 
 * Tue Jun 28 2011 Ben Skeggs <bskeggs@redhat.com> 0.91.10-1
 - upstream release 0.91.10
